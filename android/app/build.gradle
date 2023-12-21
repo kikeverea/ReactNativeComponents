@@ -74,9 +74,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.reactcomponents"
+    namespace "com.ReactNativeComponents"
     defaultConfig {
-        applicationId "com.reactcomponents"
+        applicationId "com.ReactNativeComponents"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
