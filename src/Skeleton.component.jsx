@@ -56,13 +56,17 @@ const createSkeleton = (components, containerStyle) => {
 const renderChild = (child, containerColor, key) => {
 
   const props = child.props
+  
   const isText = props.children === 'text'
+  
   const isContainer =
     !isText &&
     Array.isArray(props.children) &&
-    props.children.length > 1
+    props.children.length > 0
 
-  const style = isText ? createStyleForText(props) : props.skeletonStyle || props.style
+  const style = isText
+    ? createStyleForText(props)
+    : props.skeletonStyle || props.style
 
   return isContainer
     ? createSkeleton(props.children, style)
