@@ -1,23 +1,33 @@
+import React from 'react'
 import { View } from 'react-native'
 
-const Skeleton = ({ style, children, skeletonLayout, loading }) => {
+const Skeleton = ({ style, children, loading }) => {
   return (
     loading
-      ? createSkeleton(skeletonLayout, style)
+      ? createSkeleton(children, style)
       : <View style={ style }>{ children }</View>
   )
 }
 
-const createSkeleton = (layout, containerStyle) => {
-  console.log('creating skeleton');
+const createSkeleton = (components, containerStyle) => {
   return (
     <View style={ containerStyle }>
-      { layout.map((child, ind) => renderChild(child, ind)) }
+      {
+        React.Children.map((components), (element, index) =>
+          React.isValidElement(element) && renderChild(element, index))
+      }
     </View>
   )
 }
 
-const renderChild = (layout, key) => {
+const renderChild = (child, key) => {
+
+  const props = child.props
+  const isText = props.children === 'text'
+  const isContainer =
+    !isText &&
+    Array.isArray(props.children) &&
+    props.children.length > 1
 
   const style = {
     flex,
@@ -34,21 +44,23 @@ const renderChild = (layout, key) => {
     marginHorizontal,
     marginVertical
   }
-  = layout.text ? createStyleForText(layout) : layout
-
-  console.log(style)
+  = isText ? createStyleForText(props) : props.skeletonStyle || props.style
   
-  return layout.children
-    ? createSkeleton(layout.children, style)
+  return isContainer
+    ? createSkeleton(props.children, style)
     : <View key={ key } style={ { ...style, backgroundColor: 'pink' } } />
 }
 
-const createStyleForText = layout => {
-  console.log('TEXT LAYOUT', layout)
-  return(
+const createStyleForText = ({ style={}, skeletonLines=1, skeletonChars=6 }) => {
+  
+  const fontSize = style.fontSize || 16
+  const width = skeletonChars * fontSize * 0.8
+  const height = skeletonLines * (fontSize + 2)
+  
+  return (
     {
-      width: layout.chars * layout.fontSize,
-      height: layout.lines * (layout.fontSize + 4),
+      width: width,
+      height: height,
       borderRadius: 12
     }
   )
