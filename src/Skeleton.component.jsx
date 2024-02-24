@@ -1,11 +1,44 @@
-import React from 'react'
-import { View } from 'react-native'
+import React, { useEffect, useRef } from 'react'
+import { Animated, View } from 'react-native'
 
 const Skeleton = ({ style, children, loading }) => {
+  
+  const opacityAnim = useRef(new Animated.Value(1)).current
+
+  const fade =
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(700),
+        Animated.timing(opacityAnim, {
+        toValue: 0.4,
+        duration: 1000,
+        useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    )
+
+  useEffect(() => {
+    if (loading)
+      fade.start()
+
+    return () => fade.stop()
+  },
+  [])
+
+
   return (
     loading
-      ? createSkeleton(children, style)
-      : <View style={ style }>{ children }</View>
+      ? <Animated.View style={{ opacity: opacityAnim }}>
+          { createSkeleton(children, style) }
+        </Animated.View>
+      : <View style={ style }>
+          { children }
+        </View>
   )
 }
 
@@ -48,7 +81,7 @@ const renderChild = (child, key) => {
   
   return isContainer
     ? createSkeleton(props.children, style)
-    : <View key={ key } style={ { ...style, backgroundColor: 'pink' } } />
+    : <View key={ key } style={ { ...style, backgroundColor: '#C4CDD3' } } />
 }
 
 const createStyleForText = ({ style={}, skeletonLines=1, skeletonChars=6 }) => {
