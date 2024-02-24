@@ -3,14 +3,21 @@ import Text from './text.component'
 import colors from '../styles/colors'
 import text from '../styles/text'
 import { useRef } from 'react'
+import Skeleton from '../../Skeleton.component'
+
+const DEFAULT_BACKGROUND_COLOR = '#706F6F'
+const DEFAULT_DECORATION_COLOR = '#343434'
+const DEFAULT_ACTIVE_DECORATION_COLOR = '#A9A9AA'
 
 const ActionButton = ({
-  style,
+  style={},
   label,
   icon,
   decorationWidth='25%',
   decorationAngle=45,
   decorationGap=0,
+  decorationColor=DEFAULT_DECORATION_COLOR,
+  decorationActiveColor=DEFAULT_ACTIVE_DECORATION_COLOR,
   loading,
   startLoading,
   stopLoading,
@@ -59,20 +66,12 @@ const ActionButton = ({
   const right = useRef(0)
   const bottom = useRef(0)
   
-  const width = determineWidth(style?.width)
-  const height = style?.height ? style.height : 50
+  const width = determineWidth(style.width)
+  const height = style.height ? style.height : 50
   const decorationContainerWidth = determineDecorationWidth(decorationWidth, width)
+  const backgroundColor = style.backgroundColor || DEFAULT_BACKGROUND_COLOR
   
   const hideShape = shapeMetrics(height, decorationContainerWidth, decorationAngle)
-
-  const defaultIconBackground = colors.primaryDark
-  const activeIconBackground = colors.primaryLight
-
-  const activeStyles = StyleSheet.create({
-    activeBackground: {
-      backgroundColor: loading ? activeIconBackground : defaultIconBackground
-    }
-  })
 
   const decorationLayout = {
     width: decorationContainerWidth,
@@ -80,6 +79,7 @@ const ActionButton = ({
     justifyContent: 'center',
     alignItems: 'center',
     paddingEnd: hideShape.width / 2,
+    backgroundColor: loading ? decorationActiveColor : decorationColor
   }
 
   const labelGap = {
@@ -92,7 +92,12 @@ const ActionButton = ({
     height: 0,
     borderLeftWidth: hideShape.width,
     borderBottomWidth: hideShape.height,
-    left: hideShape.pos
+    left: hideShape.pos,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: backgroundColor,
   }
 
   const pressIn = () => startLoading()
@@ -130,22 +135,26 @@ const ActionButton = ({
   return (
     <Pressable
       ref={ selfRef }
-      style={ style }
       onLayout={ measureComponent }
       onPress={ onPress }
       onPressIn={ pressIn }
       onPressOut={ pressOut }
     >
-      <View style={[ activeStyles.activeBackground, decorationLayout ]}>
-        { loading
-          ? <ActivityIndicator size='large' color={ colors.primaryDark } />
-          : <View>{ icon }</View>
-        }
-      </View>
-      <View style={[ styles.labelContainer, labelGap ]}>
-        <Text style={ styles.label }>{ label }</Text>
-      </View>
-      <View style={[ styles.hideShape, hideLayout ]}/>
+      <Skeleton
+        style={{ ...style, backgroundColor: backgroundColor, overflow: 'hidden' }}
+        loading={ true }
+      >
+        <View style={ decorationLayout }>
+          { loading
+            ? <ActivityIndicator size='large' color={ colors.primaryDark } />
+            : <View>{ icon }</View>
+          }
+        </View>
+        <View style={[ styles.labelContainer, labelGap ]}>
+          <Text style={ styles.label }>{ label }</Text>
+        </View>
+        <View style={ hideLayout }/>
+      </Skeleton>
     </Pressable>
   )
 }
@@ -155,7 +164,7 @@ export default ActionButton
 const styles = StyleSheet.create({
   labelContainer: {
     height: '100%',
-    width: '100%', 
+    width: '100%',
     justifyContent: 'center',
     backgroundColor: colors.accent,
   },
@@ -164,11 +173,4 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: colors.textButtons,
   },
-  hideShape: {
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: colors.accent,
-  }
 })

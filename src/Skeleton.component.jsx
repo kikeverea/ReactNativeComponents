@@ -5,17 +5,17 @@ const Skeleton = ({ style, children, loading }) => {
   
   const opacityAnim = useRef(new Animated.Value(1)).current
 
-  const fade =
+  const pulse =
     Animated.loop(
       Animated.sequence([
         Animated.delay(700),
-        Animated.timing(opacityAnim, {
+        Animated.timing(opacityAnim, {    // moves opacityAnim from 1 to 0.4
         toValue: 0.4,
         duration: 1000,
         useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
-          toValue: 1,
+          toValue: 1,                     // moves opacityAnim from 0.4 to 1
           duration: 800,
           useNativeDriver: true,
         }),
@@ -24,12 +24,11 @@ const Skeleton = ({ style, children, loading }) => {
 
   useEffect(() => {
     if (loading)
-      fade.start()
-
-    return () => fade.stop()
+      pulse.start()
+    
+    return () => pulse.stop()
   },
   [])
-
 
   return (
     loading
@@ -44,16 +43,17 @@ const Skeleton = ({ style, children, loading }) => {
 
 const createSkeleton = (components, containerStyle) => {
   return (
-    <View style={ containerStyle }>
+    <View style={ cleanContainerStyle(containerStyle) }>
       {
         React.Children.map((components), (element, index) =>
-          React.isValidElement(element) && renderChild(element, index))
+          React.isValidElement(element)
+            && renderChild(element, containerStyle.backgroundColor, index))
       }
     </View>
   )
 }
 
-const renderChild = (child, key) => {
+const renderChild = (child, containerColor, key) => {
 
   const props = child.props
   const isText = props.children === 'text'
@@ -62,26 +62,11 @@ const renderChild = (child, key) => {
     Array.isArray(props.children) &&
     props.children.length > 1
 
-  const style = {
-    flex,
-    flexDirection,
-    width,
-    height,
-    alignItems,
-    justifyContent,
-    gap,
-    padding,
-    paddingHorizontal,
-    paddingVertical,
-    margin,
-    marginHorizontal,
-    marginVertical
-  }
-  = isText ? createStyleForText(props) : props.skeletonStyle || props.style
-  
+  const style = isText ? createStyleForText(props) : props.skeletonStyle || props.style
+
   return isContainer
     ? createSkeleton(props.children, style)
-    : <View key={ key } style={ { ...style, backgroundColor: '#C4CDD3' } } />
+    : <View key={ key } style={ cleanStyle(style, containerColor) } />
 }
 
 const createStyleForText = ({ style={}, skeletonLines=1, skeletonChars=6 }) => {
@@ -98,5 +83,23 @@ const createStyleForText = ({ style={}, skeletonLines=1, skeletonChars=6 }) => {
     }
   )
 }
+
+const cleanStyle = (style, containerColor) =>
+  ({ ...style,
+    borderWidth: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    backgroundColor: 
+      containerColor && containerColor !== 'transparent'
+        ? 'transparent'
+        : '#C4CDD3'
+  })
+
+const cleanContainerStyle = style =>
+  ({ ...style,
+    backgroundColor: style.backgroundColor ? '#C4CDD3' : 'transparent',
+    borderWidth: 0 })
 
 export default Skeleton
