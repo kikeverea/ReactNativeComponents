@@ -1,16 +1,58 @@
 import { useState } from 'react'
-import { View, StyleSheet, TextInput, Button } from 'react-native'
+import { View, StyleSheet, TextInput, Text } from 'react-native'
+import colors from '../styles/colors'
+import Button from './button.component'
 
-const DefaultButton = ({ onPress }) => {
+const DefaultButton = ({ title, onPress, loading }) => {
   return (
     <Button
-      title='SUBMIT'
+      loading={ loading }
+      title={ title }
       onPress={ onPress }
     />
   )
 }
 
-const Form = ({ style, fields, InputComponent=TextInput, ButtonComponent=DefaultButton, onSubmit }) => {
+const DefaultInput = ({ placeholder, value, error, onChangeText, autoCapitalize, isPassword, dismissError }) => {
+  
+  const changeText = text => {
+    dismissError()
+    onChangeText(text)
+  }
+
+  return (
+    <View>
+      <TextInput
+        style={{
+          borderColor: colors.primaryLight,
+          borderBottomWidth: 0.5,
+          padding: 8
+        }}
+        placeholder={ placeholder }
+        placeholderTextColor={ colors.primaryLight }
+        autoCapitalize={ autoCapitalize }
+        secureTextEntry={ isPassword }
+        value={ value }
+        onChangeText={ changeText }
+      />
+      { error &&
+        <Text style={{ paddingHorizontal: 8, paddingVertical: 4, color: colors.error }}>
+          { error }
+        </Text>
+      }
+    </View>
+  )
+}
+
+const Form = ({
+  style,
+  fields,
+  InputComponent=DefaultInput,
+  ButtonComponent=DefaultButton,
+  buttonLabel,
+  onSubmit,
+  loading
+}) => {
 
   if (!onSubmit)
     throw new Error('You must provide an onSubmit prop to use this component')
@@ -25,14 +67,15 @@ const Form = ({ style, fields, InputComponent=TextInput, ButtonComponent=Default
     
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i]
-      const error = field.validate && field.validate()
+      const value = fieldsState[i][0]             // [text, _setText]
+      const error = field.validate && field.validate(value)
       
       if (error) {
         fieldsErrors[i][1](error)                 // [_error, setError]
         submit = false
       }
 
-      result[field.name] = fieldsState[i][0]      // [text, _setText]
+      result[field.name] = value
     }
     
     if (submit) {
@@ -48,6 +91,8 @@ const Form = ({ style, fields, InputComponent=TextInput, ButtonComponent=Default
               key={ ind }
               label={ field.label }
               placeholder={ field.placeholder }
+              isPassword={ field.isPassword }
+              autoCapitalize={ field.autoCapitalize || 'none'}
               value={ fieldsState[ind][0] }                     // [text, _setText]
               onChangeText={ fieldsState[ind][1] }              // [_text, setText]
               error={ fieldsErrors[ind][0] }                    // [error, _setError]
@@ -55,7 +100,7 @@ const Form = ({ style, fields, InputComponent=TextInput, ButtonComponent=Default
             />
         )}
       </View>
-      <ButtonComponent onPress={ submitForm } />
+      <ButtonComponent title={ buttonLabel } loading={ loading } onPress={ submitForm } />
     </View>
   )
 
@@ -63,11 +108,12 @@ const Form = ({ style, fields, InputComponent=TextInput, ButtonComponent=Default
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8
+    width: '80%',
+    padding: 8,
   },
   inputContainer: {
-    paddingBottom: 8,
-    gap: 16
+    paddingBottom: 48,
+    gap: 24
   }
 })
 
